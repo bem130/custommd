@@ -1,4 +1,5 @@
 use askama::Template;
+use pulldown_cmark::{html, Options, Parser};
 use serde::Deserialize;
 use std::fmt::{self, Write};
 use wasm_bindgen::prelude::*;
@@ -253,7 +254,10 @@ pub struct HtmlTemplate<'a> {
 pub fn process_markdown(md: &str) -> String {
     let (front_matter, title, content) = split_front_matter(md);
     let clean_title = title.trim_start_matches('#').trim();
-    let html_output = markdown::to_html(content);
+    // pulldown-cmark でMarkdown→HTML変換
+    let mut html_output = String::new();
+    let parser = Parser::new_ext(content, Options::all());
+    html::push_html(&mut html_output, parser);
     let wrapped = wrap_head_sections_nested(&html_output);
     let tags = front_matter.tags.as_ref().map(|tags| {
         tags.iter().map(|tag| TagLink {
@@ -278,7 +282,9 @@ fn main() {
     let md = include_str!("./sample.md");
     let (front_matter, title, content) = split_front_matter(md);
     let clean_title = title.trim_start_matches('#').trim();
-    let html_output = markdown::to_html(content);
+    let mut html_output = String::new();
+    let parser = Parser::new_ext(content, Options::all());
+    html::push_html(&mut html_output, parser);
     let wrapped = wrap_head_sections_nested(&html_output);
     // タグをTagLink構造体に変換
     let tags = front_matter.tags.as_ref().map(|tags| {
