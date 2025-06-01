@@ -1,12 +1,15 @@
+:root {
+    color-scheme: dark;
+}
+
+main {
+    padding: 10px;
+}
 
 .section {
     margin-bottom: 20px;
     padding-left: 10px;
     border: 1px solid red;
-}
-
-h1, h2, h3 {
-    color: #333;
 }
 
 pre {
