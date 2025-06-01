@@ -244,15 +244,21 @@ pub fn process_markdown(md: &str) -> String {
     let clean_title = title.trim_start_matches('#').trim();
     let html_output = markdown::to_html(content);
     let wrapped = wrap_head_sections_nested(&html_output);
-    // タグをTagLink構造体に変換
     let tags = front_matter.tags.as_ref().map(|tags| {
         tags.iter().map(|tag| TagLink {
             name: tag,
             url: format!("/tags/{}.html", tag),
         }).collect::<Vec<_>>()
     }).unwrap_or_default();
-    // テンプレートは使わず、body部分のみ返す
-    wrapped
+    let template = HtmlTemplate {
+        title: clean_title,
+        description: front_matter.description.as_deref().unwrap_or("no description"),
+        url: "https://example.com/sample",
+        image: "https://example.com/ogp.png",
+        body: &wrapped,
+        tags,
+    };
+    template.render().unwrap_or_else(|_| "<p>テンプレートエラー</p>".to_string())
 }
 
 // main関数はwasmでは不要なのでcfgで分岐
