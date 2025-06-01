@@ -4,27 +4,61 @@ use std::fmt::{self, Write};
 
 #[derive(Debug, Deserialize)]
 struct FrontMatter {
+    description: Option<String>,
     tags: Option<Vec<String>>,
 }
 
-fn split_front_matter(md: &str) -> (Option<FrontMatter>, &str) {
+fn split_front_matter(md: &str) -> (FrontMatter, String, &str) {
     let mut lines = md.lines();
-    let first = lines.next();
-    if first == Some("---") {
-        let mut yaml = String::new();
-        for line in &mut lines {
-            if line.trim() == "---" {
-                break;
-            }
-            yaml.push_str(line);
-            yaml.push('\n');
+    // 1行目: タイトル
+    let title = lines.next().unwrap_or("").trim().to_string();
+    // 2行目以降: description（空行またはtags:まで）
+    let mut description_lines = Vec::new();
+    let mut tags = Vec::new();
+    let mut in_tags = false;
+    let mut body_lines = Vec::new();
+    let mut found_tags = false;
+    for line in lines {
+        let trimmed = line.trim();
+        if !in_tags && trimmed == "tags:" {
+            in_tags = true;
+            found_tags = true;
+            continue;
         }
-        let rest = lines.collect::<Vec<_>>().join("\n");
-        let fm: Result<FrontMatter, _> = serde_yaml::from_str(&yaml);
-        (fm.ok(), Box::leak(rest.into_boxed_str()) as &str)
-    } else {
-        (None, md)
+        if in_tags {
+            if trimmed.starts_with("-") {
+                tags.push(trimmed.trim_start_matches("-").trim().to_string());
+                continue;
+            } else if !trimmed.is_empty() {
+                in_tags = false;
+            } else {
+                continue;
+            }
+        }
+        if !found_tags && !in_tags {
+            // description部（空行や---で終わる）
+            if trimmed.is_empty() || trimmed == "---" {
+                found_tags = true;
+                continue;
+            }
+            description_lines.push(line);
+            continue;
+        }
+        if !in_tags {
+            body_lines.push(line);
+        }
     }
+    let description = if description_lines.is_empty() {
+        None
+    } else {
+        Some(description_lines.join("\n").trim().to_string())
+    };
+    let fm = FrontMatter {
+        description,
+        tags: if tags.is_empty() { None } else { Some(tags) },
+    };
+    // 1行目タイトルも返す場合は _title を返すように変更可能
+    (fm, title, Box::leak(body_lines.join("\n").into_boxed_str()) as &str)
 }
 
 #[derive(Debug)]
@@ -187,6 +221,11 @@ fn wrap_head_sections_nested(html: &str) -> String {
     buf
 }
 
+struct TagLink<'a> {
+    name: &'a str,
+    url: String,
+}
+
 #[derive(Template)]
 #[template(path = "template.html")]
 struct HtmlTemplate<'a> {
@@ -195,22 +234,29 @@ struct HtmlTemplate<'a> {
     url: &'a str,
     image: &'a str,
     body: &'a str,
+    tags: Vec<TagLink<'a>>,
 }
 
 fn main() {
     let md = include_str!("./sample.md");
-    let (front_matter, content) = split_front_matter(md);
-    if let Some(fm) = &front_matter {
-        println!("Front matter: {:?}", fm);
-    }
+    let (front_matter, title, content) = split_front_matter(md);
+    let clean_title = title.trim_start_matches('#').trim();
     let html_output = markdown::to_html(content);
     let wrapped = wrap_head_sections_nested(&html_output);
+    // タグをTagLink構造体に変換
+    let tags = front_matter.tags.as_ref().map(|tags| {
+        tags.iter().map(|tag| TagLink {
+            name: tag,
+            url: format!("/tags/{}.html", tag),
+        }).collect::<Vec<_>>()
+    }).unwrap_or_default();
     let template = HtmlTemplate {
-        title: "サンプルタイトル",
-        description: "サンプルの説明文です。",
+        title: clean_title,
+        description: front_matter.description.as_deref().unwrap_or("no description"),
         url: "https://example.com/sample",
         image: "https://example.com/ogp.png",
         body: &wrapped,
+        tags,
     };
     let rendered = template.render().unwrap();
     std::fs::write("output.html", rendered).unwrap();

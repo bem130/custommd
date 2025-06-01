@@ -17,6 +17,12 @@
     <link rel="stylesheet" href="./src/style.css" />
 </head>
 <body>
+    <h1>{{ title }}</h1>
+    <div>
+        <span>tags:</span>
+        {% if tags.len() > 0 %}{% for tag in tags %}<a href="{{ tag.url }}">{{ tag.name }}</a>
+        {% if tags.len() > 1 && loop.index < tags.len() %}{% endif %}{% endfor %}{% else %}<span>none</span>{% endif %}
+    </div>
     <main>
 {{ body|safe }}
     </main>
