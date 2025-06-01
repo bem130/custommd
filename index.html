@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Rust Markdown Playground</title>
+    <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js"></script>
+</head>
+
+<body>
+    <h1>Rust Markdown Playground</h1>
+    <div class="row3">
+        <div class="col3">
+            <h2>Markdown</h2>
+            <div id="editor"></div>
+            <button id="run-btn">変換</button>
+        </div>
+        <div class="col3">
+            <h2>HTMLレンダリング</h2>
+            <iframe id="output-frame"></iframe>
+        </div>
+        <div class="col3">
+            <h2>HTMLコード</h2>
+            <div id="html-code"></div>
+        </div>
+    </div>
+    <script type="module">
+        import init, { process_markdown } from './pkg/markdown_processor.js';
+        let editor, htmlEditor;
+        require.config({ paths: { 'vs': 'https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs' } });
+        require(['vs/editor/editor.main'], async function () {
+            editor = monaco.editor.create(document.getElementById('editor'), {
+                value: await fetch('./README.md').then(res => res.text()),
+                language: 'markdown',
+                theme: 'vs-dark',
+                automaticLayout: true,
+            });
+            htmlEditor = monaco.editor.create(document.getElementById('html-code'), {
+                value: '',
+                language: 'html',
+                theme: 'vs-dark',
+                readOnly: true,
+                automaticLayout: true,
+            });
+            run();
+        });
+        function setIframeHtml(html) {
+            const iframe = document.getElementById('output-frame');
+            iframe.srcdoc = html;
+        }
+        function setHtmlCode(html) {
+            if (htmlEditor) htmlEditor.setValue(html);
+        }
+        async function run() {
+            await init();
+            if (editor) {
+                const html = process_markdown(editor.getValue());
+                setIframeHtml(html);
+                setHtmlCode(html);
+            }
+        }
+        document.getElementById('run-btn').onclick = async () => {
+            const md = editor.getValue();
+            const html = process_markdown(md);
+            setIframeHtml(html);
+            setHtmlCode(html);
+        };
+    </script>
+</body>
+
+</html>
+<style>
+h1,h2 {
+    padding: 0.01em;
+    margin: 0.1em;
+}
+
+
+:root {
+    color-scheme: dark;
+}
+body {
+    max-width: none;
+    margin: 0;
+    font-family: sans-serif;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.row3 {
+    display: flex;
+    height: calc(100vh - 60px);
+    gap: 0;
+}
+
+.col3 {
+    flex: 1 1 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 0 0.5em;
+}
+
+#editor,
+#html-code {
+    flex: 1 1 0;
+    min-height: 0;
+    border: 1px solid #ccc;
+}
+
+#output-frame {
+    flex: 1 1 0;
+    min-height: 0;
+    border: 1px solid #ccc;
+    background-color: black;
+}
+
+#run-btn {
+    margin-top: 0.5em;
+    padding: 0.5em 1.5em;
+    font-size: 1em;
+}
+</style>

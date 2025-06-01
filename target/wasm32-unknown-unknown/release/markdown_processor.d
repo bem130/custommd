@@ -1,0 +1,1 @@
+/home/runner/work/custommd/custommd/target/wasm32-unknown-unknown/release/markdown_processor.wasm: /home/runner/work/custommd/custommd/src/lib.rs /home/runner/work/custommd/custommd/templates/template.html
