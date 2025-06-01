@@ -2,7 +2,6 @@ use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
 struct FrontMatter {
-    title: Option<String>,
     tags: Option<Vec<String>>,
 }
 
@@ -28,7 +27,6 @@ fn split_front_matter(md: &str) -> (Option<FrontMatter>, &str) {
 
 fn wrap_head_sections_nested(html: &str) -> String {
     use regex::Regex;
-    // バックリファレンスを使わず、h1~h6を個別に検出
     let re = Regex::new(r#"<h([1-6])([^>]*)>.*?</h[1-6]>"#).unwrap();
     let mut result = String::new();
     let mut stack: Vec<(usize, String)> = Vec::new(); // (level, content)
@@ -45,11 +43,35 @@ fn wrap_head_sections_nested(html: &str) -> String {
         // 直前のhead~今回のheadまでの間の内容
         if last_end < start {
             let content = &html[last_end..start];
-            if !content.trim().is_empty() {
+            // ここで;;;を検出してsectionをpopする
+            let mut remain = content;
+            let delim = "<p>;;;</p>";
+            while let Some(idx) = remain.find(delim) {
+                let before = &remain[..idx];
+                if !before.trim().is_empty() {
+                    if let Some((_lvl, ref mut buf)) = stack.last_mut() {
+                        buf.push_str(before);
+                    } else {
+                        result.push_str(before);
+                    }
+                }
+                // sectionをpopしてdivでラップ
+                if let Some((_popped_level, popped_content)) = stack.pop() {
+                    let div = format!("<div class=\"section\">{}</div>", popped_content);
+                    if let Some((_parent_level, ref mut parent_content)) = stack.last_mut() {
+                        parent_content.push_str(&div);
+                    } else {
+                        result.push_str(&div);
+                    }
+                }
+                remain = &remain[idx + delim.len()..];
+            }
+            // 残り
+            if !remain.trim().is_empty() {
                 if let Some((_lvl, ref mut buf)) = stack.last_mut() {
-                    buf.push_str(content);
+                    buf.push_str(remain);
                 } else {
-                    result.push_str(content);
+                    result.push_str(remain);
                 }
             }
         }
@@ -76,11 +98,34 @@ fn wrap_head_sections_nested(html: &str) -> String {
     // 残りの内容
     if last_end < html.len() {
         let content = &html[last_end..];
-        if !content.trim().is_empty() {
+        let mut remain = content;
+        let delim = "<p>;;;</p>";
+        while let Some(idx) = remain.find(delim) {
+            let before = &remain[..idx];
+            if !before.trim().is_empty() {
+                if let Some((_lvl, ref mut buf)) = stack.last_mut() {
+                    buf.push_str(before);
+                } else {
+                    result.push_str(before);
+                }
+            }
+            // sectionをpopしてdivでラップ
+            if let Some((_popped_level, popped_content)) = stack.pop() {
+                let div = format!("<div class=\"section\">{}</div>", popped_content);
+                if let Some((_parent_level, ref mut parent_content)) = stack.last_mut() {
+                    parent_content.push_str(&div);
+                } else {
+                    result.push_str(&div);
+                }
+            }
+            remain = &remain[idx + delim.len()..];
+        }
+        // 残り
+        if !remain.trim().is_empty() {
             if let Some((_lvl, ref mut buf)) = stack.last_mut() {
-                buf.push_str(content);
+                buf.push_str(remain);
             } else {
-                result.push_str(content);
+                result.push_str(remain);
             }
         }
     }
