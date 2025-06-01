@@ -42,6 +42,10 @@
                 readOnly: true,
                 automaticLayout: true,
             });
+            // 編集時に自動で更新
+            editor.onDidChangeModelContent(() => {
+                run();
+            });
             run();
         });
         function setIframeHtml(html) {
@@ -59,12 +63,7 @@
                 setHtmlCode(html);
             }
         }
-        document.getElementById('run-btn').onclick = async () => {
-            const md = editor.getValue();
-            const html = process_markdown(md);
-            setIframeHtml(html);
-            setHtmlCode(html);
-        };
+        document.getElementById('run-btn').onclick = run;
     </script>
 </body>
 
