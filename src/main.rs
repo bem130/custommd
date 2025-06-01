@@ -1,3 +1,4 @@
+use askama::Template;
 use serde::Deserialize;
 use std::fmt::{self, Write};
 
@@ -182,8 +183,18 @@ fn wrap_head_sections_nested(html: &str) -> String {
     }
     // 整形出力
     let mut buf = String::new();
-    stack[0].fmt_with_indent(&mut buf, 0);
+    stack[0].fmt_with_indent(&mut buf, 2);
     buf
+}
+
+#[derive(Template)]
+#[template(path = "template.html")]
+struct HtmlTemplate<'a> {
+    title: &'a str,
+    description: &'a str,
+    url: &'a str,
+    image: &'a str,
+    body: &'a str,
 }
 
 fn main() {
@@ -193,7 +204,14 @@ fn main() {
         println!("Front matter: {:?}", fm);
     }
     let html_output = markdown::to_html(content);
-    let mut wrapped = wrap_head_sections_nested(&html_output);
-    wrapped.push_str("<link rel='stylesheet' href='./src/style.css' />");
-    std::fs::write("output.html", wrapped).unwrap();
+    let wrapped = wrap_head_sections_nested(&html_output);
+    let template = HtmlTemplate {
+        title: "サンプルタイトル",
+        description: "サンプルの説明文です。",
+        url: "https://example.com/sample",
+        image: "https://example.com/ogp.png",
+        body: &wrapped,
+    };
+    let rendered = template.render().unwrap();
+    std::fs::write("output.html", rendered).unwrap();
 }
