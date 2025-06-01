@@ -9,6 +9,11 @@
 
 <body>
     <h1>Rust Markdown Playground</h1>
+    <!-- 右上ダウンロードボタン -->
+    <div id="download-buttons">
+        <button id="download-md">Markdownダウンロード</button>
+        <button id="download-html">HTMLダウンロード</button>
+    </div>
     <div class="row3">
         <div class="col3">
             <h2>Markdown</h2>
@@ -64,6 +69,25 @@
             }
         }
         document.getElementById('run-btn').onclick = run;
+        // ダウンロードボタン処理
+        document.getElementById('download-md').onclick = () => {
+            if (!editor) return;
+            const blob = new Blob([editor.getValue()], { type: 'text/markdown' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'markdown.md';
+            a.click();
+            URL.revokeObjectURL(a.href);
+        };
+        document.getElementById('download-html').onclick = () => {
+            if (!htmlEditor) return;
+            const blob = new Blob([htmlEditor.getValue()], { type: 'text/html' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'output.html';
+            a.click();
+            URL.revokeObjectURL(a.href);
+        };
     </script>
 </body>
 
@@ -119,5 +143,27 @@ body {
     margin-top: 0.5em;
     padding: 0.5em 1.5em;
     font-size: 1em;
+}
+
+#download-buttons {
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    z-index: 10;
+    display: flex;
+    gap: 0.5em;
+}
+#download-buttons button {
+    padding: 0.4em 1.2em;
+    font-size: 0.95em;
+    border-radius: 4px;
+    border: none;
+    background: #222;
+    color: #fff;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+#download-buttons button:hover {
+    background: #444;
 }
 </style>
