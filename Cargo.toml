@@ -1,0 +1,10 @@
+# Cargo.toml
+[package]
+name = "markdown-processor"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+markdown = "1.0"
+serde = { version = "1.0.219", features = ["derive"] }
+serde_yaml = "0.9.34"

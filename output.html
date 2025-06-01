@@ -1,0 +1,591 @@
+<h1>Neknaj Circuit Game / Neknaj Circuit Game Language</h1>
+<p>This document provides a precise specification of Neknaj Circuit Game Language syntax to avoid common misunderstandings.</p>
+<h2>Neknaj Circuit Game</h2>
+<p><a href="https://neknaj.com/circuitgame/README">Web Page</a><br />
+<a href="https://github.com/neknaj/circuitgame">Github Repository</a><br />
+<a href="https://neknaj.github.io/circuitgame/">Web Playground (CircuitGame Web Tool)</a></p>
+<h2>Important Syntax Limitations</h2>
+<ol>
+<li>This is NOT a general-purpose programming language</li>
+<li>There are NO:
+<ul>
+<li>Arrays or lists</li>
+<li>Structs or objects</li>
+<li>Variables (except gate connections)</li>
+<li>Loops or conditionals</li>
+<li>Functions (only modules with fixed inputs/outputs)</li>
+</ul>
+</li>
+</ol>
+<h2>Basic Structure</h2>
+<p>A circuit file consists of these elements in any order:</p>
+<ol>
+<li>One <code>using nor:2-&gt;1;</code> declaration</li>
+<li>Zero or more module definitions</li>
+<li>Zero or more test definitions</li>
+</ol>
+<h3>Module Definition Syntax</h3>
+<pre><code class="language-ncg">module name (input1 input2)-&gt;(output1) {
+    wire1: gate_name &lt;- input1 input2;
+    output1: another_gate &lt;- wire1 input2;
+}
+</code></pre>
+<p>OR</p>
+<pre><code class="language-ncg">func name (input1 input2)-&gt;(output1) {
+    wire1: gate_name &lt;- input1 input2;
+    output1: another_gate &lt;- wire1 input2;
+}
+</code></pre>
+<p>Key points:</p>
+<ul>
+<li>Parentheses are required even with no inputs/outputs</li>
+<li>Each line inside must be a gate definition</li>
+<li>All identifiers must be simple names (no arrays or paths)</li>
+</ul>
+<h3>Gate Definition Syntax</h3>
+<pre><code class="language-ncg">output_name: module_name &lt;- input1 input2;
+</code></pre>
+<p>OR (multiple outputs)</p>
+<pre><code class="language-ncg">out1 out2: module_name &lt;- in1 in2;
+</code></pre>
+<p>Key points:</p>
+<ul>
+<li>Each gate must have exactly this format</li>
+<li>No expressions or calculations</li>
+<li>Names must be single identifiers</li>
+<li>Number of inputs/outputs must match the module definition</li>
+<li>The arrow <code>&lt;-</code> can be omitted, but its inclusion is recommended.</li>
+<li>Must end with semicolon</li>
+<li>Spaces around separators are optional</li>
+</ul>
+<h3>What's NOT Valid</h3>
+<p>❌ These are NOT supported:</p>
+<pre><code class="language-ncg">// No arrays
+outputs[0]: nor &lt;- inputs[0] inputs[1];
+
+// No member access
+module.output: nor &lt;- a.input b.input;
+
+// No nested definitions
+a: (nor &lt;- b c): nor &lt;- d e;
+
+// No gate parameters
+mygate&lt;T&gt;: nor &lt;- in1 in2;
+</code></pre>
+<h2>Examples of Valid Code</h2>
+<h3>Valid NOT Gate</h3>
+<pre><code class="language-ncg">module not (x)-&gt;(y) {
+    y: nor &lt;- x x;
+}
+</code></pre>
+<h3>Valid Half Adder</h3>
+<pre><code class="language-ncg">module halfadder (a b)-&gt;(sum carry) {
+    carry: and &lt;- a b;
+    sum: xor &lt;- a b;
+}
+</code></pre>
+<h3>Valid Test Pattern</h3>
+<pre><code class="language-ncg">test not:1-&gt;1 {
+    t -&gt; f;
+    f -&gt; t;
+}
+</code></pre>
+<h2>Function Modules vs Non-Function Modules</h2>
+<p>This language has two types of modules: function modules (defined with <code>func</code>) and non-function modules (defined with <code>module</code>).</p>
+<h3>Function Modules (func)</h3>
+<p>Function modules have strict ordering requirements:</p>
+<ul>
+<li>All inputs must be used in a forward-only manner</li>
+<li>Values must be defined before they can be used</li>
+<li>Can only call other function modules</li>
+<li>Best for combinational logic circuits</li>
+</ul>
+<p>Example:</p>
+<pre><code class="language-ncg">func and (x y)-&gt;(out) {
+    a: not &lt;- x;    // Valid: using input x
+    b: not &lt;- y;    // Valid: using input y
+    out: nor &lt;- a b;  // Valid: using previously defined wires
+}
+</code></pre>
+<p>Invalid function module:</p>
+<pre><code class="language-ncg">func invalid (x)-&gt;(out) {
+    out: nor &lt;- x b;  // ERROR: using 'b' before definition
+    b: not &lt;- x;
+}
+</code></pre>
+<h3>Non-Function Modules (module)</h3>
+<p>Non-function modules are more flexible:</p>
+<ul>
+<li>Can use values before they are defined</li>
+<li>They can participate in circular dependencies, such as those found in feedback loops.</li>
+<li>Can call both function and non-function modules</li>
+<li>Suitable for sequential circuits and feedback loops</li>
+</ul>
+<p>Example:</p>
+<pre><code class="language-ncg">module sr_latch (s r)-&gt;(q nq) {
+    q: nor &lt;- r nq;   // Valid: using 'nq' before definition
+    nq: nor &lt;- s q;   // Creates a feedback loop
+}
+</code></pre>
+<h2>Module Calling Rules</h2>
+<h3>Important Restrictions</h3>
+<ol>
+<li>Function modules (<code>func</code>) can only call other function modules</li>
+<li>Non-function modules (<code>module</code>) can call both types of modules</li>
+<li>Violating these rules will result in compilation errors</li>
+</ol>
+<pre><code class="language-ncg">// WRONG: Function module trying to use a non-function module
+func wrong (x)-&gt;(y) {
+    y: sr_latch &lt;- x x;  // Error: Cannot use sr_latch (non-func) in a func module
+}
+
+// Correct usage
+func correct (x)-&gt;(y) {
+    y: not &lt;- x;  // OK: 'not' is a function module
+}
+</code></pre>
+<h3>Usage Guidelines</h3>
+<ul>
+<li>
+<p>Use <code>func</code> for:</p>
+<ul>
+<li>Combinational logic (AND, OR, XOR gates)</li>
+<li>Arithmetic circuits (adders, multipliers)</li>
+<li>Any circuit without feedback loops</li>
+</ul>
+</li>
+<li>
+<p>Use <code>module</code> for:</p>
+<ul>
+<li>Sequential logic</li>
+<li>Memory elements (latches, flip-flops)</li>
+<li>Circuits with feedback loops</li>
+<li>Clock generators</li>
+<li>Oscillators</li>
+</ul>
+</li>
+</ul>
+<h2>Common Mistakes to Avoid</h2>
+<ol>
+<li>
+<p>Trying to use arrays:</p>
+<pre><code class="language-ncg">// WRONG:
+bits[8]: register &lt;- data[8];
+
+// Correct:
+bit0 bit1 bit2 bit3: register &lt;- data0 data1 data2 data3;
+</code></pre>
+</li>
+<li>
+<p>Trying to use nested structures:</p>
+<pre><code class="language-ncg">// WRONG:
+alu.add.result: adder &lt;- a.value b.value;
+
+// Correct:
+add_result: adder &lt;- a_value b_value;
+</code></pre>
+</li>
+<li>
+<p>Trying to use expressions:</p>
+<pre><code class="language-ncg">// WRONG:
+sum: adder &lt;- (a + b) c;
+
+// Correct:
+temp: adder &lt;- a b;
+sum: adder &lt;- temp c;
+</code></pre>
+</li>
+</ol>
+<h2>Valid Identifier Names</h2>
+<ul>
+<li>Must start with a letter or underscore</li>
+<li>Can contain letters, numbers, and underscores</li>
+<li>Case-sensitive</li>
+<li>Cannot be keywords</li>
+</ul>
+<p>Examples:</p>
+<ul>
+<li>✅ <code>result</code></li>
+<li>✅ <code>tmp_1</code></li>
+<li>✅ <code>carry_out</code></li>
+<li>❌ <code>0bit</code></li>
+<li>❌ <code>my.wire</code></li>
+<li>❌ <code>data[0]</code></li>
+</ul>
+<h2>Testing Syntax</h2>
+<p>Test patterns must follow this exact format:</p>
+<pre><code class="language-ncg">test module_name:inputs-&gt;outputs {
+    t f -&gt; t;    // inputs -&gt; expected_outputs
+    f t -&gt; f;
+}
+</code></pre>
+<p>Important restrictions:</p>
+<ul>
+<li>Tests can ONLY be written for function modules (<code>func</code>)</li>
+<li>Tests CANNOT be written for non-function modules (<code>module</code>)</li>
+<li>This is because non-function modules may contain feedback loops and state, making their behavior time-dependent</li>
+</ul>
+<p>Example of what's allowed and what's not:</p>
+<pre><code class="language-ncg">// ALLOWED: Testing a function module
+func and (x y)-&gt;(z) {
+    // ...implementation...
+}
+test and:2-&gt;1 {
+    t t -&gt; t;
+    t f -&gt; f;
+}
+
+// NOT ALLOWED: Cannot test non-function modules
+module sr_latch (s r)-&gt;(q nq) {
+    // ...implementation...
+}
+test sr_latch:2-&gt;2 {  // ERROR: Cannot test non-function modules
+    t f -&gt; t f;
+}
+</code></pre>
+<p>Where:</p>
+<ul>
+<li><code>t</code>, <code>T</code>, <code>1</code>, <code>h</code>, <code>H</code> represent true</li>
+<li><code>f</code>, <code>F</code>, <code>0</code>, <code>l</code>, <code>L</code> represent false</li>
+<li>Spaces between values are required</li>
+<li>Arrow <code>-&gt;</code> is required</li>
+<li>Each pattern must end with semicolon</li>
+</ul>
+<h2>Template Code Examples</h2>
+<h3>Basic Gates</h3>
+<pre><code class="language-ncg">using nor:2-&gt;1;
+
+// NOT gate
+func not (x)-&gt;(out) {
+    out: nor &lt;- x x;
+}
+
+// AND gate
+func and (x y)-&gt;(out) {
+    a: not &lt;- x;
+    b: not &lt;- y;
+    out: nor &lt;- a b;
+}
+
+// OR gate
+func or (x y)-&gt;(out) {
+    a: nor &lt;- x y;
+    out: not &lt;- a;
+}
+</code></pre>
+<h3>Memory Elements</h3>
+<pre><code class="language-ncg">// SR Latch (must be non-function module due to feedback)
+module sr_latch (s r)-&gt;(q nq) {
+    q: nor &lt;- r nq;  // Uses nq before definition
+    nq: nor &lt;- s q;  // Creates feedback loop
+}
+
+// D Latch using SR Latch
+module d_latch (d clk)-&gt;(q nq) {
+    nd: not &lt;- d;
+    s: nor &lt;- nd clk;
+    r: nor &lt;- d clk;
+    q nq: sr_latch &lt;- s r;
+}
+</code></pre>
+<h3>Arithmetic Circuits</h3>
+<pre><code class="language-ncg">// Half Adder
+func half_adder (a b)-&gt;(sum carry) {
+    carry: and &lt;- a b;
+    sum: xor &lt;- a b;
+}
+
+// Full Adder using Half Adder
+func full_adder (a b cin)-&gt;(sum cout) {
+    s1 c1: half_adder &lt;- a b;
+    s2 c2: half_adder &lt;- s1 cin;
+    c3: or &lt;- c1 c2;
+    sum: buf &lt;- s2;
+    cout: buf &lt;- c3;
+}
+</code></pre>
+<h3>Sequential Circuits</h3>
+<pre><code class="language-ncg">// Clock Generator (requires feedback)
+module clock()-&gt;(clk) {
+    clk: not &lt;- nclk;
+    nclk: not &lt;- clk;
+}
+
+// Counter with Reset
+module counter (reset)-&gt;(out) {
+    next: increment &lt;- current;
+    current: d_latch &lt;- next reset;
+    out: buf &lt;- current;
+}
+</code></pre>
+<h3>Test Patterns</h3>
+<pre><code class="language-ncg">// Basic gate test
+test not:1-&gt;1 {
+    t -&gt; f;
+    f -&gt; t;
+}
+
+// Multiple input test
+test and:2-&gt;1 {
+    t t -&gt; t;
+    t f -&gt; f;
+    f t -&gt; f;
+    f f -&gt; f;
+}
+
+// Multiple output test
+test half_adder:2-&gt;2 {
+    t t -&gt; t t;  // sum,carry
+    t f -&gt; t f;
+    f t -&gt; t f;
+    f f -&gt; f f;
+}
+</code></pre>
+<h2>Comments</h2>
+<h3>Line Comments</h3>
+<p>The language supports single-line comments using double forward slashes:</p>
+<pre><code class="language-ncg">// This is a comment
+</code></pre>
+<p>Key points about comments:</p>
+<ul>
+<li>Comments start with <code>//</code> and continue to the end of the line</li>
+<li>Comments are completely ignored by the compiler</li>
+<li>Empty lines and whitespace are also ignored</li>
+<li>Block comments (<code>/* ... */</code>) are NOT supported</li>
+<li>Hash (<code>#</code>) comments are NOT supported</li>
+</ul>
+<h3>Comment Placement</h3>
+<p>Comments can be placed in the following locations:</p>
+<ol>
+<li>
+<p>At the file level:</p>
+<pre><code class="language-ncg">// File description
+using nor:2-&gt;1;
+
+// Module definitions below
+module example...
+</code></pre>
+</li>
+<li>
+<p>Between module/test definitions:</p>
+<pre><code class="language-ncg">module not (x)-&gt;(y) {
+    y: nor &lt;- x x;
+}
+
+// AND gate implementation
+module and (x y)-&gt;(z) {
+    z: nor &lt;- x y;
+}
+</code></pre>
+</li>
+<li>
+<p>Inside module/test bodies:</p>
+<pre><code class="language-ncg">module full_adder (a b cin)-&gt;(sum cout) {
+    // First compute partial sum
+    s1 c1: half_adder &lt;- a b;
+    
+    // Then add carry in
+    s2 c2: half_adder &lt;- s1 cin;
+    
+    // Combine carries
+    cout: or &lt;- c1 c2;
+    sum: buf &lt;- s2;
+}
+</code></pre>
+</li>
+<li>
+<p>At the end of lines:</p>
+<pre><code class="language-ncg">module example (in)-&gt;(out) {
+    a: not &lt;- in;    // Invert input
+    out: buf &lt;- a;   // Buffer the result
+}
+</code></pre>
+</li>
+</ol>
+<h3>What's NOT Supported</h3>
+<p>❌ These comment styles are NOT supported:</p>
+<pre><code class="language-ncg">/* Block comments using slash-star are not supported */
+
+# Hash comments are not supported
+
+/// Documentation comments are not special
+//! Module documentation is not special
+
+--  Different comment markers are not supported
+''' Python-style comments are not supported
+</code></pre>
+<h2>Error Messages and Troubleshooting</h2>
+<p>The compiler performs several validation checks and may produce the following errors:</p>
+<h3>Module Definition Errors</h3>
+<ol>
+<li>
+<p><strong>Duplicated Module Names</strong></p>
+<pre><code>Error: Defined module name Duplicated: module_name
+</code></pre>
+<ul>
+<li>Each module name must be unique</li>
+<li>Check for modules with the same name</li>
+<li>Rename one of the conflicting modules</li>
+</ul>
+</li>
+<li>
+<p><strong>Undefined Module Usage</strong></p>
+<pre><code>Error: Undefined module used: module_name in parent_module
+</code></pre>
+<ul>
+<li>You're trying to use a module that hasn't been defined</li>
+<li>Make sure the module is defined before use</li>
+<li>Check for typos in module names</li>
+</ul>
+</li>
+</ol>
+<h3>Gate Connection Errors</h3>
+<ol>
+<li>
+<p><strong>Duplicated Identifiers</strong></p>
+<pre><code>Error: Defined id Duplicated: Input wire_name in module_name
+Error: Defined id Duplicated: Gate-Out wire_name in module_name
+</code></pre>
+<ul>
+<li>Each wire name must be unique within a module</li>
+<li>Rename duplicate wire identifiers</li>
+<li>Check input parameters and gate outputs</li>
+</ul>
+</li>
+<li>
+<p><strong>Undefined Identifiers</strong></p>
+<pre><code>Error: Undefined id used: Gate-In wire_name in module_name
+Error: Undefined id used: Output wire_name in module_name
+</code></pre>
+<ul>
+<li>You're trying to use a wire that hasn't been defined</li>
+<li>Make sure all inputs are defined</li>
+<li>Check for typos in wire names</li>
+</ul>
+</li>
+</ol>
+<h3>Function Module Specific Errors</h3>
+<ol>
+<li>
+<p><strong>Forward Reference Error</strong></p>
+<pre><code>Error: In a function module, a value cannot be used before it is declared: wire_name in module_name
+</code></pre>
+<ul>
+<li>Function modules require strict ordering</li>
+<li>Move the wire definition before its usage</li>
+<li>Consider using a non-function module if feedback is needed</li>
+</ul>
+</li>
+<li>
+<p><strong>Invalid Module Usage</strong></p>
+<pre><code>Error: Function modules cannot call non-function modules: module_name used in func_name
+</code></pre>
+<ul>
+<li>Function modules can only use other function modules</li>
+<li>Either change the called module to a function module</li>
+<li>Or change the calling module to a non-function module</li>
+</ul>
+</li>
+</ol>
+<h3>Type Errors</h3>
+<ol>
+<li><strong>Mismatched Gate Types</strong>
+<pre><code>Error: Used module with unmatched type: module_name expected 2-&gt;1 but got 3-&gt;1, in parent_module
+</code></pre>
+<ul>
+<li>Number of inputs/outputs doesn't match the module definition</li>
+<li>Verify the number of inputs and outputs for the module</li>
+<li>Make sure you're providing the correct number of connections</li>
+</ul>
+</li>
+</ol>
+<h3>Dependency Errors</h3>
+<ol>
+<li><strong>Circular Dependencies</strong>
+<pre><code>Error: Cycle detected in the graph, sorting cannot be completed.
+</code></pre>
+<ul>
+<li>Modules have circular dependencies</li>
+<li>Identify the dependency cycle</li>
+<li>Break the cycle</li>
+</ul>
+</li>
+</ol>
+<h3>Warning Messages</h3>
+<ol>
+<li>
+<p><strong>Unused Modules</strong></p>
+<pre><code>Warning: Module has no dependency: module_name
+</code></pre>
+<ul>
+<li>Module is defined but never used</li>
+<li>Either remove unused modules</li>
+<li>Or add them to your circuit</li>
+</ul>
+</li>
+<li>
+<p><strong>Multiple Root Modules</strong></p>
+<pre><code>Warning: Multiple modules are not used by other modules: module1, module2, module3
+</code></pre>
+<ul>
+<li>Multiple modules are at the top level</li>
+<li>This is allowed but might indicate design issues</li>
+<li>Consider if this is intentional</li>
+</ul>
+</li>
+<li>
+<p><strong>Module has no Test</strong></p>
+<pre><code>Warning: test No test provided for module: nor
+</code></pre>
+<ul>
+<li>The nor module is defined, but it is not used within any other defined module or tested in the test section.</li>
+<li>Write test for the <code>nor</code> module.</li>
+</ul>
+</li>
+<li>
+<p><strong>Module Test Failed</strong></p>
+<pre><code>Warning: test Test failed: module buf input [true], expected [true] but got [false]
+</code></pre>
+<ul>
+<li>The test you wrote for the buf module didn't pass. Specifically, when you gave the buf module a true input, you expected it to output true, but it actually output false.</li>
+<li>Either the buf module is not working correctly and needs to be fixed, or</li>
+<li>You made a mistake when you wrote the test and should correct the test pattern.</li>
+<li>The two above action must be performed until the test passed.</li>
+</ul>
+</li>
+</ol>
+<h3>Best Practices for Error Prevention</h3>
+<ol>
+<li>
+<p><strong>Plan Module Structure</strong></p>
+<ul>
+<li>Decide which modules need to be function modules vs non-function modules</li>
+<li>Draw dependency diagrams before implementation</li>
+<li>Keep modules small and focused</li>
+</ul>
+</li>
+<li>
+<p><strong>Naming Conventions</strong></p>
+<ul>
+<li>Use descriptive, unique names for modules</li>
+<li>Use consistent naming patterns for wires</li>
+<li>Ensure numeric suffixes are sequential and represent a logical ordering</li>
+</ul>
+</li>
+<li>
+<p><strong>Type Checking</strong></p>
+<ul>
+<li>Verify input/output counts before implementing</li>
+<li>Document module interfaces</li>
+<li>Test modules individually</li>
+</ul>
+</li>
+<li>
+<p><strong>Dependency Management</strong></p>
+<ul>
+<li>Keep dependencies unidirectional when possible</li>
+<li>Use function modules for pure combinational logic</li>
+<li>Designate non-function modules for sequential circuits</li>
+</ul>
+</li>
+</ol>
