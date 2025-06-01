@@ -1,10 +1,10 @@
-<h1>Neknaj Circuit Game / Neknaj Circuit Game Language</h1>
+<div class="section"><h1>Neknaj Circuit Game / Neknaj Circuit Game Language</h1>
 <p>This document provides a precise specification of Neknaj Circuit Game Language syntax to avoid common misunderstandings.</p>
-<h2>Neknaj Circuit Game</h2>
+<div class="section"><h2>Neknaj Circuit Game</h2>
 <p><a href="https://neknaj.com/circuitgame/README">Web Page</a><br />
 <a href="https://github.com/neknaj/circuitgame">Github Repository</a><br />
 <a href="https://neknaj.github.io/circuitgame/">Web Playground (CircuitGame Web Tool)</a></p>
-<h2>Important Syntax Limitations</h2>
+</div><div class="section"><h2>Important Syntax Limitations</h2>
 <ol>
 <li>This is NOT a general-purpose programming language</li>
 <li>There are NO:
@@ -17,14 +17,14 @@
 </ul>
 </li>
 </ol>
-<h2>Basic Structure</h2>
+</div><div class="section"><h2>Basic Structure</h2>
 <p>A circuit file consists of these elements in any order:</p>
 <ol>
 <li>One <code>using nor:2-&gt;1;</code> declaration</li>
 <li>Zero or more module definitions</li>
 <li>Zero or more test definitions</li>
 </ol>
-<h3>Module Definition Syntax</h3>
+<div class="section"><h3>Module Definition Syntax</h3>
 <pre><code class="language-ncg">module name (input1 input2)-&gt;(output1) {
     wire1: gate_name &lt;- input1 input2;
     output1: another_gate &lt;- wire1 input2;
@@ -42,7 +42,7 @@
 <li>Each line inside must be a gate definition</li>
 <li>All identifiers must be simple names (no arrays or paths)</li>
 </ul>
-<h3>Gate Definition Syntax</h3>
+</div><div class="section"><h3>Gate Definition Syntax</h3>
 <pre><code class="language-ncg">output_name: module_name &lt;- input1 input2;
 </code></pre>
 <p>OR (multiple outputs)</p>
@@ -58,7 +58,7 @@
 <li>Must end with semicolon</li>
 <li>Spaces around separators are optional</li>
 </ul>
-<h3>What's NOT Valid</h3>
+</div><div class="section"><h3>What's NOT Valid</h3>
 <p>❌ These are NOT supported:</p>
 <pre><code class="language-ncg">// No arrays
 outputs[0]: nor &lt;- inputs[0] inputs[1];
@@ -72,27 +72,26 @@ a: (nor &lt;- b c): nor &lt;- d e;
 // No gate parameters
 mygate&lt;T&gt;: nor &lt;- in1 in2;
 </code></pre>
-<h2>Examples of Valid Code</h2>
-<h3>Valid NOT Gate</h3>
+</div></div><div class="section"><h2>Examples of Valid Code</h2><div class="section"><h3>Valid NOT Gate</h3>
 <pre><code class="language-ncg">module not (x)-&gt;(y) {
     y: nor &lt;- x x;
 }
 </code></pre>
-<h3>Valid Half Adder</h3>
+</div><div class="section"><h3>Valid Half Adder</h3>
 <pre><code class="language-ncg">module halfadder (a b)-&gt;(sum carry) {
     carry: and &lt;- a b;
     sum: xor &lt;- a b;
 }
 </code></pre>
-<h3>Valid Test Pattern</h3>
+</div><div class="section"><h3>Valid Test Pattern</h3>
 <pre><code class="language-ncg">test not:1-&gt;1 {
     t -&gt; f;
     f -&gt; t;
 }
 </code></pre>
-<h2>Function Modules vs Non-Function Modules</h2>
+</div></div><div class="section"><h2>Function Modules vs Non-Function Modules</h2>
 <p>This language has two types of modules: function modules (defined with <code>func</code>) and non-function modules (defined with <code>module</code>).</p>
-<h3>Function Modules (func)</h3>
+<div class="section"><h3>Function Modules (func)</h3>
 <p>Function modules have strict ordering requirements:</p>
 <ul>
 <li>All inputs must be used in a forward-only manner</li>
@@ -113,7 +112,7 @@ mygate&lt;T&gt;: nor &lt;- in1 in2;
     b: not &lt;- x;
 }
 </code></pre>
-<h3>Non-Function Modules (module)</h3>
+</div><div class="section"><h3>Non-Function Modules (module)</h3>
 <p>Non-function modules are more flexible:</p>
 <ul>
 <li>Can use values before they are defined</li>
@@ -127,8 +126,7 @@ mygate&lt;T&gt;: nor &lt;- in1 in2;
     nq: nor &lt;- s q;   // Creates a feedback loop
 }
 </code></pre>
-<h2>Module Calling Rules</h2>
-<h3>Important Restrictions</h3>
+</div></div><div class="section"><h2>Module Calling Rules</h2><div class="section"><h3>Important Restrictions</h3>
 <ol>
 <li>Function modules (<code>func</code>) can only call other function modules</li>
 <li>Non-function modules (<code>module</code>) can call both types of modules</li>
@@ -144,7 +142,7 @@ func correct (x)-&gt;(y) {
     y: not &lt;- x;  // OK: 'not' is a function module
 }
 </code></pre>
-<h3>Usage Guidelines</h3>
+</div><div class="section"><h3>Usage Guidelines</h3>
 <ul>
 <li>
 <p>Use <code>func</code> for:</p>
@@ -165,7 +163,7 @@ func correct (x)-&gt;(y) {
 </ul>
 </li>
 </ul>
-<h2>Common Mistakes to Avoid</h2>
+</div></div><div class="section"><h2>Common Mistakes to Avoid</h2>
 <ol>
 <li>
 <p>Trying to use arrays:</p>
@@ -196,7 +194,7 @@ sum: adder &lt;- temp c;
 </code></pre>
 </li>
 </ol>
-<h2>Valid Identifier Names</h2>
+</div><div class="section"><h2>Valid Identifier Names</h2>
 <ul>
 <li>Must start with a letter or underscore</li>
 <li>Can contain letters, numbers, and underscores</li>
@@ -212,7 +210,7 @@ sum: adder &lt;- temp c;
 <li>❌ <code>my.wire</code></li>
 <li>❌ <code>data[0]</code></li>
 </ul>
-<h2>Testing Syntax</h2>
+</div><div class="section"><h2>Testing Syntax</h2>
 <p>Test patterns must follow this exact format:</p>
 <pre><code class="language-ncg">test module_name:inputs-&gt;outputs {
     t f -&gt; t;    // inputs -&gt; expected_outputs
@@ -251,8 +249,7 @@ test sr_latch:2-&gt;2 {  // ERROR: Cannot test non-function modules
 <li>Arrow <code>-&gt;</code> is required</li>
 <li>Each pattern must end with semicolon</li>
 </ul>
-<h2>Template Code Examples</h2>
-<h3>Basic Gates</h3>
+</div><div class="section"><h2>Template Code Examples</h2><div class="section"><h3>Basic Gates</h3>
 <pre><code class="language-ncg">using nor:2-&gt;1;
 
 // NOT gate
@@ -273,7 +270,7 @@ func or (x y)-&gt;(out) {
     out: not &lt;- a;
 }
 </code></pre>
-<h3>Memory Elements</h3>
+</div><div class="section"><h3>Memory Elements</h3>
 <pre><code class="language-ncg">// SR Latch (must be non-function module due to feedback)
 module sr_latch (s r)-&gt;(q nq) {
     q: nor &lt;- r nq;  // Uses nq before definition
@@ -288,7 +285,7 @@ module d_latch (d clk)-&gt;(q nq) {
     q nq: sr_latch &lt;- s r;
 }
 </code></pre>
-<h3>Arithmetic Circuits</h3>
+</div><div class="section"><h3>Arithmetic Circuits</h3>
 <pre><code class="language-ncg">// Half Adder
 func half_adder (a b)-&gt;(sum carry) {
     carry: and &lt;- a b;
@@ -304,7 +301,7 @@ func full_adder (a b cin)-&gt;(sum cout) {
     cout: buf &lt;- c3;
 }
 </code></pre>
-<h3>Sequential Circuits</h3>
+</div><div class="section"><h3>Sequential Circuits</h3>
 <pre><code class="language-ncg">// Clock Generator (requires feedback)
 module clock()-&gt;(clk) {
     clk: not &lt;- nclk;
@@ -318,7 +315,7 @@ module counter (reset)-&gt;(out) {
     out: buf &lt;- current;
 }
 </code></pre>
-<h3>Test Patterns</h3>
+</div><div class="section"><h3>Test Patterns</h3>
 <pre><code class="language-ncg">// Basic gate test
 test not:1-&gt;1 {
     t -&gt; f;
@@ -341,8 +338,7 @@ test half_adder:2-&gt;2 {
     f f -&gt; f f;
 }
 </code></pre>
-<h2>Comments</h2>
-<h3>Line Comments</h3>
+</div></div><div class="section"><h2>Comments</h2><div class="section"><h3>Line Comments</h3>
 <p>The language supports single-line comments using double forward slashes:</p>
 <pre><code class="language-ncg">// This is a comment
 </code></pre>
@@ -354,7 +350,7 @@ test half_adder:2-&gt;2 {
 <li>Block comments (<code>/* ... */</code>) are NOT supported</li>
 <li>Hash (<code>#</code>) comments are NOT supported</li>
 </ul>
-<h3>Comment Placement</h3>
+</div><div class="section"><h3>Comment Placement</h3>
 <p>Comments can be placed in the following locations:</p>
 <ol>
 <li>
@@ -402,7 +398,7 @@ module and (x y)-&gt;(z) {
 </code></pre>
 </li>
 </ol>
-<h3>What's NOT Supported</h3>
+</div><div class="section"><h3>What's NOT Supported</h3>
 <p>❌ These comment styles are NOT supported:</p>
 <pre><code class="language-ncg">/* Block comments using slash-star are not supported */
 
@@ -414,9 +410,9 @@ module and (x y)-&gt;(z) {
 --  Different comment markers are not supported
 ''' Python-style comments are not supported
 </code></pre>
-<h2>Error Messages and Troubleshooting</h2>
+</div></div><div class="section"><h2>Error Messages and Troubleshooting</h2>
 <p>The compiler performs several validation checks and may produce the following errors:</p>
-<h3>Module Definition Errors</h3>
+<div class="section"><h3>Module Definition Errors</h3>
 <ol>
 <li>
 <p><strong>Duplicated Module Names</strong></p>
@@ -439,7 +435,7 @@ module and (x y)-&gt;(z) {
 </ul>
 </li>
 </ol>
-<h3>Gate Connection Errors</h3>
+</div><div class="section"><h3>Gate Connection Errors</h3>
 <ol>
 <li>
 <p><strong>Duplicated Identifiers</strong></p>
@@ -464,7 +460,7 @@ Error: Undefined id used: Output wire_name in module_name
 </ul>
 </li>
 </ol>
-<h3>Function Module Specific Errors</h3>
+</div><div class="section"><h3>Function Module Specific Errors</h3>
 <ol>
 <li>
 <p><strong>Forward Reference Error</strong></p>
@@ -487,7 +483,7 @@ Error: Undefined id used: Output wire_name in module_name
 </ul>
 </li>
 </ol>
-<h3>Type Errors</h3>
+</div><div class="section"><h3>Type Errors</h3>
 <ol>
 <li><strong>Mismatched Gate Types</strong>
 <pre><code>Error: Used module with unmatched type: module_name expected 2-&gt;1 but got 3-&gt;1, in parent_module
@@ -499,7 +495,7 @@ Error: Undefined id used: Output wire_name in module_name
 </ul>
 </li>
 </ol>
-<h3>Dependency Errors</h3>
+</div><div class="section"><h3>Dependency Errors</h3>
 <ol>
 <li><strong>Circular Dependencies</strong>
 <pre><code>Error: Cycle detected in the graph, sorting cannot be completed.
@@ -511,7 +507,7 @@ Error: Undefined id used: Output wire_name in module_name
 </ul>
 </li>
 </ol>
-<h3>Warning Messages</h3>
+</div><div class="section"><h3>Warning Messages</h3>
 <ol>
 <li>
 <p><strong>Unused Modules</strong></p>
@@ -554,7 +550,7 @@ Error: Undefined id used: Output wire_name in module_name
 </ul>
 </li>
 </ol>
-<h3>Best Practices for Error Prevention</h3>
+</div><div class="section"><h3>Best Practices for Error Prevention</h3>
 <ol>
 <li>
 <p><strong>Plan Module Structure</strong></p>
@@ -588,4 +584,4 @@ Error: Undefined id used: Output wire_name in module_name
 <li>Designate non-function modules for sequential circuits</li>
 </ul>
 </li>
-</ol>
+</ol></div></div></div><link rel='stylesheet' href='./src/style.css' />

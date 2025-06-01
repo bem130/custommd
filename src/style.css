@@ -1,0 +1,21 @@
+
+.section {
+    margin-bottom: 20px;
+    padding-left: 10px;
+    border: 1px solid red;
+}
+
+h1, h2, h3 {
+    color: #333;
+}
+
+pre {
+    background-color: #f4f4f4;
+    padding: 10px;
+    border-radius: 5px;
+    overflow-x: auto;
+}
+
+code {
+    font-family: monospace;
+}
