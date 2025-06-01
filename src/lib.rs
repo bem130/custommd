@@ -19,8 +19,16 @@ pub fn split_front_matter(md: &str) -> (FrontMatter, String, &str) {
     let mut in_tags = false;
     let mut body_lines = Vec::new();
     let mut found_tags = false;
+    let mut body_flag = false;
     for line in lines {
         let trimmed = line.trim();
+        if trimmed == "---" {
+            body_flag = true;
+        }
+        if body_flag {
+            body_lines.push(line);
+            continue;
+        }
         if !in_tags && trimmed == "tags:" {
             in_tags = true;
             found_tags = true;
@@ -38,15 +46,12 @@ pub fn split_front_matter(md: &str) -> (FrontMatter, String, &str) {
         }
         if !found_tags && !in_tags {
             // description部（空行や---で終わる）
-            if trimmed.is_empty() || trimmed == "---" {
+            if trimmed.is_empty() {
                 found_tags = true;
                 continue;
             }
             description_lines.push(line);
             continue;
-        }
-        if !in_tags {
-            body_lines.push(line);
         }
     }
     let description = if description_lines.is_empty() {
