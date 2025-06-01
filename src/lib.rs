@@ -96,9 +96,15 @@ impl Section {
                 writeln!(f, "{}</div>", indent_str(indent)).unwrap();
             }
             Section::Content(s) => {
-                for line in s.trim().lines() {
-                    if !line.trim().is_empty() {
-                        writeln!(f, "{}{}", indent_str(indent), line.trim()).unwrap();
+                let trimmed = s.trim();
+                if trimmed.starts_with("<pre><code") && trimmed.ends_with("</code></pre>") {
+                    // コードブロックはそのまま出力（インデントやトリムしない）
+                    writeln!(f, "{}{}", indent_str(indent), trimmed).unwrap();
+                } else {
+                    for line in trimmed.lines() {
+                        if !line.trim().is_empty() {
+                            writeln!(f, "{}{}", indent_str(indent), line.trim()).unwrap();
+                        }
                     }
                 }
             }

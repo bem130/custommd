@@ -7,7 +7,7 @@ use askama::Template;
 // main関数はwasmでは不要なのでcfgで分岐
 #[cfg(not(target_arch = "wasm32"))]
 fn main() {
-    let md = include_str!("./sample.md");
+    let md = include_str!("../README.md");
     let (front_matter, title, content) = split_front_matter(md);
     let clean_title = title.trim_start_matches('#').trim();
     let html_output = markdown::to_html(content);
