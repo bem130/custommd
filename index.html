@@ -28,9 +28,9 @@
         import init, { process_markdown } from './pkg/markdown_processor.js';
         let editor, htmlEditor;
         require.config({ paths: { 'vs': 'https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs' } });
-        require(['vs/editor/editor.main'], function () {
+        require(['vs/editor/editor.main'], async function () {
             editor = monaco.editor.create(document.getElementById('editor'), {
-                value: '# サンプル\n説明文\n\ntags:\n- rust\n- wasm\n\n---\n\n## セクション\n内容\n',
+                value: await fetch('./README.md').then(res => res.text()),
                 language: 'markdown',
                 theme: 'vs-dark',
                 automaticLayout: true,
