@@ -54,6 +54,8 @@
 }
 
 body {
+    word-break: auto-phrase;
+    text-wrap: pretty;
     font-family: "Noto Serif JP", serif;
     font-optical-sizing: auto;
     font-weight: 300;
