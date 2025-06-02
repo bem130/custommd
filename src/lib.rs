@@ -39,6 +39,7 @@ pub fn split_front_matter(md: &str) -> (FrontMatter, String, &str) {
             } else if !trimmed.is_empty() {
                 in_tags = false;
             } else {
+                body_flag = true;
                 continue;
             }
         }

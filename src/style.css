@@ -21,6 +21,8 @@
     --code-block-background-color: hsla(206, 14%, 90%, 0.8);
     --title-accent-left-color: hsl(255, 100%, 15%);
     --title-accent-right-color: hsl(200, 70%, 63%);
+    --tag-background-color: hsl(199, 25%, 66%);
+    --tag-background-hover-color: hsl(200, 67%, 76%);
 }
 
 .dark-theme {
@@ -43,6 +45,8 @@
     --code-block-background-color: hsla(240, 3%, 14%, 0.8);
     --title-accent-left-color: hsl(255, 100%, 50%);
     --title-accent-right-color: hsl(200, 69%, 34%);
+    --tag-background-color: hsl(200, 71%, 27%);
+    --tag-background-hover-color: hsl(200, 69%, 40%);
 }
 
 :root {
@@ -171,4 +175,30 @@ table {
         left: 0;
         z-index: 1;
     }
+}
+
+.tag-badge {
+    display: inline-block;
+    padding: 0.15em 0.8em;
+    border-radius: 1em;
+    background: var(--tag-background-color);
+    color: #fff;
+    font-size: 0.97em;
+    text-decoration: none;
+    transition: background 0.2s, color 0.2s;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    border: none;
+}
+.tag-badge > .tag-icon {
+    font-size: 80%;
+}
+.tag-badge:hover {
+    background: var(--tag-background-hover-color);
+    color: #fff;
+    text-decoration: underline;
+}
+.tag-none {
+    color: #aaa;
+    font-style: italic;
+    margin-left: 0.5em;
 }
