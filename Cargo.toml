@@ -1,6 +1,6 @@
 # Cargo.toml
 [package]
-name = "markdown-processor"
+name = "markdown_custom_by_bem130"
 version = "0.1.0"
 edition = "2021"
 
@@ -9,6 +9,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 askama = "0.14.0"
+clap = { version = "4.5", features = ["derive"] }
 pulldown-cmark = "0.13"
 regex = "1.11.1"
 serde = { version = "1.0.219", features = ["derive"] }
