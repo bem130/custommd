@@ -45,8 +45,8 @@
     --code-block-background-color: hsla(240, 3%, 14%, 0.8);
     --title-accent-left-color: hsl(255, 100%, 50%);
     --title-accent-right-color: hsl(200, 69%, 34%);
-    --tag-background-color: hsl(200, 71%, 27%);
-    --tag-background-hover-color: hsl(200, 69%, 40%);
+    --tag-background-color: hsl(200, 67%, 19%);
+    --tag-background-hover-color: hsl(200, 58%, 32%);
 }
 
 :root {
