@@ -39,6 +39,7 @@
                 language: 'markdown',
                 theme: 'vs-dark',
                 automaticLayout: true,
+                renderWhitespace: 'all',
             });
             htmlEditor = monaco.editor.create(document.getElementById('html-code'), {
                 value: '',
@@ -46,6 +47,7 @@
                 theme: 'vs-dark',
                 readOnly: true,
                 automaticLayout: true,
+                renderWhitespace: 'all',
             });
             // 編集時に自動で更新
             editor.onDidChangeModelContent(() => {
