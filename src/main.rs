@@ -16,6 +16,7 @@ fn main() {
     html::push_html(&mut html_output, parser);
     let wrapped = wrap_head_sections_nested(&html_output);
     // タグをTagLink構造体に変換
+    println!("tags {:?}", &front_matter.tags);
     let tags = front_matter.tags.as_ref().map(|tags| {
         tags.iter().map(|tag| TagLink {
             name: tag,
