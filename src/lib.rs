@@ -103,9 +103,7 @@ impl Section {
                     writeln!(f, "{}{}", indent_str(indent), trimmed).unwrap();
                 } else {
                     for line in trimmed.lines() {
-                        if !line.trim().is_empty() {
-                            writeln!(f, "{}{}", indent_str(indent), line.trim()).unwrap();
-                        }
+                        writeln!(f, "{}{}", indent_str(indent), line.trim()).unwrap();
                     }
                 }
             }
