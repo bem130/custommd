@@ -1,14 +1,14 @@
 {
-  "name": "markdown-processor",
+  "name": "markdown_custom_by_bem130",
   "type": "module",
   "version": "0.1.0",
   "files": [
-    "markdown_processor_bg.wasm",
-    "markdown_processor.js",
-    "markdown_processor.d.ts"
+    "markdown_custom_by_bem130_bg.wasm",
+    "markdown_custom_by_bem130.js",
+    "markdown_custom_by_bem130.d.ts"
   ],
-  "main": "markdown_processor.js",
-  "types": "markdown_processor.d.ts",
+  "main": "markdown_custom_by_bem130.js",
+  "types": "markdown_custom_by_bem130.d.ts",
   "sideEffects": [
     "./snippets/*"
   ]
