@@ -35,3 +35,19 @@
 </body>
 </html>
 <script>hljs.highlightAll();</script>
+<script>
+window.addEventListener('DOMContentLoaded', function() {
+    // display数式
+    document.querySelectorAll('span.math.math-display').forEach(function(span) {
+        try {
+            katex.render(span.textContent, span, {displayMode: true, throwOnError: false});
+        } catch(e) {}
+    });
+    // inline数式
+    document.querySelectorAll('span.math.math-inline').forEach(function(span) {
+        try {
+            katex.render(span.textContent, span, {displayMode: false, throwOnError: false});
+        } catch(e) {}
+    });
+});
+</script>
