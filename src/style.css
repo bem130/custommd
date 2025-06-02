@@ -193,6 +193,7 @@ table {
 }
 .tag-badge > .tag-icon {
     font-size: 80%;
+    user-select: none;
 }
 .tag-badge:hover {
     background: var(--tag-background-hover-color);
