@@ -137,7 +137,7 @@ pub fn wrap_head_sections_nested(html: &str) -> String {
                     }
                 }
                 // sectionをpopして親にpush
-                if stack.len() > 2 {
+                if stack.len() > 1 {
                     let section = stack.pop().unwrap();
                     if let Some(Section::Section { children, .. }) = stack.last_mut() {
                         children.push(section);
@@ -196,7 +196,7 @@ pub fn wrap_head_sections_nested(html: &str) -> String {
                     children.push(Section::Content(before.to_string()));
                 }
             }
-            if stack.len() > 2 {
+            if stack.len() > 1 {
                 let section = stack.pop().unwrap();
                 if let Some(Section::Section { children, .. }) = stack.last_mut() {
                     children.push(section);
