@@ -1,7 +1,7 @@
 use askama::Template;
 use pulldown_cmark::{html, Options, Parser};
 use serde::Deserialize;
-use std::fmt::{self, Write};
+use std::{fmt::{self, Write}, io::empty};
 use wasm_bindgen::prelude::*;
 
 #[derive(Debug, Deserialize)]
@@ -17,40 +17,47 @@ pub fn split_front_matter(md: &str) -> (FrontMatter, String, &str) {
     // 2行目以降: description（空行またはtags:まで）
     let mut description_lines = Vec::new();
     let mut tags = Vec::new();
-    let mut in_tags = false;
     let mut body_lines = Vec::new();
-    let mut found_tags = false;
-    let mut body_flag = false;
+    // 順番
+    // 0. description
+    // 1. tags
+    // 2. body
+    let mut step = 0;
+    let mut empty_line = 0;
     for line in lines {
         let trimmed = line.trim();
-        if body_flag {
-            body_lines.push(line);
-            continue;
+        match step {
+            0 => {
+                if trimmed == "tags:" {
+                    step = 1;
+                    continue;
+                } else {
+                    if trimmed.is_empty() {
+                        empty_line += 1;
+                        if empty_line>1 {
+                            step = 2;
+                            continue;
+                        }
+                    }
+                    else {
+                        description_lines.push(line);
+                        empty_line = 0;
+                    }
+                    continue;
+                }
+            },
+            1 => {
+                if trimmed.starts_with("-") {
+                    tags.push(trimmed.trim_start_matches("-").trim().to_string());
+                    continue;
+                } else {
+                    step = 2;
+                }
+            },
+            _ => {}
         }
-        if !in_tags && trimmed == "tags:" {
-            in_tags = true;
-            found_tags = true;
-            continue;
-        }
-        if in_tags {
-            if trimmed.starts_with("-") {
-                tags.push(trimmed.trim_start_matches("-").trim().to_string());
-                continue;
-            } else if !trimmed.is_empty() {
-                in_tags = false;
-            } else {
-                body_flag = true;
-                continue;
-            }
-        }
-        if !found_tags && !in_tags {
-            if trimmed.is_empty() {
-                found_tags = true;
-                continue;
-            }
-            description_lines.push(line);
-            continue;
-        }
+        // body
+        body_lines.push(line);
     }
     let description = if description_lines.is_empty() {
         None
